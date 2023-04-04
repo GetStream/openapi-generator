@@ -10,10 +10,6 @@ import com.squareup.moshi.JsonClass
 {{/moshi}}
 {{#jackson}}
 import com.fasterxml.jackson.annotation.JsonProperty
-{{#discriminator}}
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-{{/discriminator}}
 {{/jackson}}
 {{#kotlinx_serialization}}
 import {{#serializableModel}}kotlinx.serialization.Serializable as KSerializable{{/serializableModel}}{{^serializableModel}}kotlinx.serialization.Serializable{{/serializableModel}}
@@ -50,9 +46,11 @@ import {{packageName}}.infrastructure.ITransformForStorage
 /**
  * {{{description}}}
  *
+{{^discriminator}}
 {{#allVars}}
  * @param {{{name}}} {{{description}}}
 {{/allVars}}
+{{/discriminator}}
  */
 {{#parcelizeModels}}
 @Parcelize
@@ -62,13 +60,13 @@ import {{packageName}}.infrastructure.ITransformForStorage
 @Deprecated(message = "This schema is deprecated.")
 {{/isDeprecated}}
 {{>additionalModelTypeAnnotations}}
-{{#nonPublicApi}}internal {{/nonPublicApi}}{{#discriminator}}interface{{/discriminator}}{{^discriminator}}data class{{/discriminator}} {{classname}}{{^discriminator}} (
+{{#nonPublicApi}}internal {{/nonPublicApi}}{{#discriminator}}public sealed class{{/discriminator}}{{^discriminator}}data class{{/discriminator}} {{classname}}{{^discriminator}} (
 
 {{#allVars}}
 {{#required}}{{>data_class_req_var}}{{/required}}{{^required}}{{>data_class_opt_var}}{{/required}}{{^-last}},{{/-last}}
 
 {{/allVars}}
-){{/discriminator}}{{#parent}}{{^serializableModel}}{{^parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{#serializableModel}}{{^parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Serializable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{^serializableModel}}{{#parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{#serializableModel}}{{#parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Serializable, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{#serializableModel}}{{^parcelizeModels}} : Serializable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{^serializableModel}}{{#parcelizeModels}} : Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{#serializableModel}}{{#parcelizeModels}} : Serializable, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#generateRoomModels}}{{#parent}}, {{/parent}}{{^discriminator}}{{^parent}}:{{/parent}} ITransformForStorage<{{classname}}RoomModel>{{/discriminator}}{{/generateRoomModels}}{{#vendorExtensions.x-has-data-class-body}} {
+){{/discriminator}}{{#vendorExtensions.x-stream-kt-parent}} : {{vendorExtensions.x-stream-kt-parent}}(){{/vendorExtensions.x-stream-kt-parent}}{{#parent}}{{^serializableModel}}{{^parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{#serializableModel}}{{^parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Serializable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{^serializableModel}}{{#parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{#serializableModel}}{{#parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Serializable, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{#serializableModel}}{{^parcelizeModels}} : Serializable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{^serializableModel}}{{#parcelizeModels}} : Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{#serializableModel}}{{#parcelizeModels}} : Serializable, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#generateRoomModels}}{{#parent}}, {{/parent}}{{^discriminator}}{{^parent}}:{{/parent}} ITransformForStorage<{{classname}}RoomModel>{{/discriminator}}{{/generateRoomModels}}{{#vendorExtensions.x-has-data-class-body}} {
 {{/vendorExtensions.x-has-data-class-body}}
 {{#generateRoomModels}}
     companion object { }
@@ -83,10 +81,8 @@ import {{packageName}}.infrastructure.ITransformForStorage
         private const val serialVersionUID: Long = 123
     }
 {{/serializableModel}}
-{{#discriminator}}{{#vars}}{{#required}}
-{{>interface_req_var}}{{/required}}{{^required}}
-{{>interface_opt_var}}{{/required}}{{/vars}}{{/discriminator}}
 {{#hasEnums}}
+{{^discriminator}}
 {{#vars}}
 {{#isEnum}}
     /**
@@ -142,6 +138,7 @@ import {{packageName}}.infrastructure.ITransformForStorage
     }{{/enumUnknownDefaultCase}}{{/kotlinx_serialization}}
 {{/isEnum}}
 {{/vars}}
+{{/discriminator}}
 {{/hasEnums}}
 {{#vendorExtensions.x-has-data-class-body}}
 }
