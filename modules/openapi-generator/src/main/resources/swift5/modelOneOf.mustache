@@ -1,3 +1,9 @@
+{{#discriminator}}
+internal class {{classname}}Mapping: Decodable {
+    let {{ discriminator.propertyName }}: String
+}
+{{/discriminator}}
+
 {{#nonPublicApi}}internal{{/nonPublicApi}}{{^nonPublicApi}}public{{/nonPublicApi}} enum {{classname}}: {{#useVapor}}Content{{/useVapor}}{{^useVapor}}Codable, JSONEncodable{{#vendorExtensions.x-swift-hashable}}, Hashable{{/vendorExtensions.x-swift-hashable}}{{/useVapor}} {
     {{#oneOf}}
     case type{{.}}({{.}})
@@ -13,19 +19,41 @@
         }
     }
 
+{{#discriminator}}
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let dto = try container.decode({{classname}}Mapping.self)
+    {{#discriminator.mappedModels}}
+        {{#-first}}
+        if dto.{{ discriminator.propertyName }} == "{{getMappingName}}" {
+        {{/-first}}
+        {{^-first}}
+        } else if dto.{{ discriminator.propertyName }} == "{{getMappingName}}" {
+        {{/-first}}
+            let value = try container.decode({{modelName}}.self)
+            self = .type{{modelName}}(value)
+    {{/discriminator.mappedModels}}
+        } else {
+            throw DecodingError.typeMismatch(Self.Type.self, .init(codingPath: decoder.codingPath, debugDescription: "Unable to decode instance of {{classname}}"))
+        }
+    }
+{{/discriminator}}
+
+{{^discriminator}}
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         {{#oneOf}}
-        {{#-first}}
-        if let value = try? container.decode({{.}}.self) {
-        {{/-first}}
-        {{^-first}}
-        } else if let value = try? container.decode({{.}}.self) {
-        {{/-first}}
+            {{#-first}}
+                if let value = try? container.decode({{.}}.self) {
+            {{/-first}}
+            {{^-first}}
+                } else if let value = try? container.decode({{.}}.self) {
+            {{/-first}}
             self = .type{{.}}(value)
         {{/oneOf}}
         } else {
             throw DecodingError.typeMismatch(Self.Type.self, .init(codingPath: decoder.codingPath, debugDescription: "Unable to decode instance of {{classname}}"))
         }
     }
+{{/discriminator}}
 }
