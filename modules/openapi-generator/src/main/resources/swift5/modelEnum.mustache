@@ -3,5 +3,18 @@
 {{#enumVars}}
     case {{{name}}} = {{{value}}}
 {{/enumVars}}
+{{#isString}}
+    case unknown = "_unknown"
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let decodedValue = try? container.decode(String.self),
+            let value = {{classname}}(rawValue: decodedValue) {
+            self = value
+        } else {
+            self = .unknown
+        }
+    }
+{{/isString}}
 {{/allowableValues}}
 }
