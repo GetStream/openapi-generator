@@ -51,16 +51,21 @@ import kotlinx.serialization.*
     {{/multiplatform}}
     {{#isArray}}
     {{#isList}}
-    {{&name}}(listOf({{{value}}})){{^-last}},{{/-last}}{{#-last}};{{/-last}}
+    {{&name}}(listOf({{{value}}})),
     {{/isList}}
     {{^isList}}
-    {{&name}}(arrayOf({{{value}}})){{^-last}},{{/-last}}{{#-last}};{{/-last}}
+    {{&name}}(arrayOf({{{value}}})),
     {{/isList}}
     {{/isArray}}
     {{^isArray}}
-    {{&name}}({{{value}}}){{^-last}},{{/-last}}{{#-last}};{{/-last}}
+    {{&name}}({{{value}}}),
     {{/isArray}}
 {{/enumVars}}{{/allowableValues}}
+    /**
+    * This case is used when decoding an unknown value.
+    */
+    unknown("unknown");
+
     /**
      * Override toString() to avoid using the enum variable name as the value, and instead use
      * the actual value defined in the API spec file.
@@ -77,13 +82,13 @@ import kotlinx.serialization.*
         fun encode(data: kotlin.Any?): kotlin.String? = if (data is {{classname}}) "$data" else null
 
         /**
-         * Returns a valid [{{classname}}] for [data], null otherwise.
+         * Returns a valid [{{classname}}] for [data], unknown otherwise.
          */
         fun decode(data: kotlin.Any?): {{classname}}? = data?.let {
           val normalizedData = "$it".lowercase()
           values().firstOrNull { value ->
             it == value || normalizedData == "$value".lowercase()
-          }
+          }?: unknown
         }
     }
 }{{#kotlinx_serialization}}{{#enumUnknownDefaultCase}}
