@@ -1,5 +1,7 @@
 {{#vendorExtensions.x-stream-is-ws-call-event}}
-sealed interface WSCallEvent {}
+sealed interface WSCallEvent {
+    fun getCallCID(): String
+}
 {{/vendorExtensions.x-stream-is-ws-call-event}}
 {{#vendorExtensions.x-stream-is-ws-client-event}}
 sealed interface WSClientEvent {}
