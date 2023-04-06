@@ -25,7 +25,7 @@ Each language has its own path with its own mustache files, the way this files a
 
 Templates are all stored under `modules/openapi-generator/src/main/resources`, when modifying templates you definetely do not want to rebuild the whole jar, to do this make sure to pass the cli jar the path where templates are (the path must by absolute so YMMV here).
 
-### Change Kotlin codegen template
+### Work on Kotlin codegen templates
 
 This will build the `~/src/protocol/openapi/video-openapi.yaml` spec file using the templates in `~/src/openapi-generator/modules/openapi-generator/src/main/resources/kotlin-client/`. Generated code is placed in the `kt` path.
 
@@ -36,6 +36,33 @@ java -jar modules/openapi-generator-cli/target/openapi-generator-cli.jar generat
    -g kotlin \
    -o kt
 ```
+
+### Work on Swift codegen template
+
+```bash
+java -jar modules/openapi-generator-cli/target/openapi-generator-cli.jar generate \
+   -i ~/src/protocol/openapi/video-openapi.yaml \
+   -t ~/src/openapi-generator/modules/openapi-generator/src/main/resources/swift5/ \
+   --additional-properties=nonPublicApi=true
+   -g swift5 \
+   -o swift
+```
+
+
+### Change Typescript codegen template
+
+```bash
+java -jar modules/openapi-generator-cli/target/openapi-generator-cli.jar generate \
+   -i ~/src/protocol/openapi/video-openapi.yaml \
+   -t ~/src/openapi-generator/modules/openapi-generator/src/main/resources/typescript-fetch/ \
+   --additional-properties=supportsES6=true \
+   --additional-properties=modelPropertyNaming=original \
+   --additional-properties=enumPropertyNaming=original \
+   --additional-properties=withoutRuntimeChecks=true \
+   -g typescript-fetch \
+   -o typescript
+```
+
 
 You can find more info on how templating works as well as debugging stuff [here](https://github.com/GetStream/openapi-generator/blob/master/docs/templating.md)
 
