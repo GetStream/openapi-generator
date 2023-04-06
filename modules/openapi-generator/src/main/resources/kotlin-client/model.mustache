@@ -6,6 +6,10 @@ package {{modelPackage}}
 
 {{#models}}
 {{#model}}
+{{#vendorExtensions.x-stream-is-ws-call-event}}{{>stream_event}}{{/vendorExtensions.x-stream-is-ws-call-event}}
+{{#vendorExtensions.x-stream-is-ws-client-event}}{{>stream_event}}{{/vendorExtensions.x-stream-is-ws-client-event}}
+{{^vendorExtensions.x-stream-is-ws-call-event}}{{^vendorExtensions.x-stream-is-ws-client-event}}
 {{#isEnum}}{{>enum_class}}{{/isEnum}}{{^isEnum}}{{#isAlias}}typealias {{classname}} = {{{dataType}}}{{/isAlias}}{{^isAlias}}{{>data_class}}{{/isAlias}}{{/isEnum}}
+{{/vendorExtensions.x-stream-is-ws-client-event}}{{/vendorExtensions.x-stream-is-ws-call-event}}
 {{/model}}
 {{/models}}

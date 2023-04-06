@@ -249,6 +249,8 @@ public abstract class AbstractKotlinCodegen extends DefaultCodegen implements Co
         importMapping.put("LocalTime", "java.time.LocalTime");
 
         specialCharReplacements.put(";", "Semicolon");
+        // seriously, who wants minus in a name!
+        specialCharReplacements.remove("-");
 
         cliOptions.clear();
         addOption(CodegenConstants.SOURCE_FOLDER, CodegenConstants.SOURCE_FOLDER_DESC, sourceFolder);
