@@ -20,11 +20,15 @@ extension {{projectName}}API {
 {{#description}}
 
 /** {{.}} */{{/description}}{{#isDeprecated}}
-@available(*, deprecated, message: "This schema is deprecated."){{/isDeprecated}}{{#vendorExtensions.x-is-one-of-interface}}
+@available(*, deprecated, message: "This schema is deprecated."){{/isDeprecated}}
+{{#vendorExtensions.x-stream-is-ws-call-event}}{{>stream_event}}{{/vendorExtensions.x-stream-is-ws-call-event}}
+{{#vendorExtensions.x-stream-is-ws-client-event}}{{>stream_event}}{{/vendorExtensions.x-stream-is-ws-client-event}}
+{{^vendorExtensions.x-stream-is-ws-call-event}}{{^vendorExtensions.x-stream-is-ws-client-event}}
+{{#vendorExtensions.x-is-one-of-interface}}
 {{> modelOneOf}}{{/vendorExtensions.x-is-one-of-interface}}{{^vendorExtensions.x-is-one-of-interface}}{{#isArray}}
 {{> modelArray}}{{/isArray}}{{^isArray}}{{#isEnum}}
 {{> modelEnum}}{{/isEnum}}{{^isEnum}}
-{{> modelObject}}{{/isEnum}}{{/isArray}}{{/vendorExtensions.x-is-one-of-interface}}{{/model}}{{/models}}
+{{> modelObject}}{{/isEnum}}{{/isArray}}{{/vendorExtensions.x-is-one-of-interface}}{{/vendorExtensions.x-stream-is-ws-client-event}}{{/vendorExtensions.x-stream-is-ws-call-event}}{{/model}}{{/models}}
 {{#swiftUseApiNamespace}}
 }
 {{/swiftUseApiNamespace}}

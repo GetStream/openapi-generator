@@ -1,0 +1,10 @@
+{{#vendorExtensions.x-stream-is-ws-call-event}}
+internal protocol WSCallEvent {
+    var callCid: String { get }
+}
+{{/vendorExtensions.x-stream-is-ws-call-event}}
+{{#vendorExtensions.x-stream-is-ws-client-event}}
+internal protocol WSClientEvent {
+    var connectionId: String { get }
+}
+{{/vendorExtensions.x-stream-is-ws-client-event}}
