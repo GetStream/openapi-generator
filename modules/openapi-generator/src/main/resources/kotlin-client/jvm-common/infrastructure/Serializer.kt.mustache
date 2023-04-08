@@ -7,6 +7,8 @@ import com.squareup.moshi.adapters.EnumJsonAdapter
 {{/enumUnknownDefaultCase}}
 {{^moshiCodeGen}}
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+{{! more hardcoded stuff we need}}
+import org.openapitools.client.models.VideoEventAdapter
 {{/moshiCodeGen}}
 {{/moshi}}
 {{#gson}}
@@ -64,8 +66,10 @@ import java.util.concurrent.atomic.AtomicLong
         .add(ByteArrayAdapter())
         .add(URIAdapter())
         {{^moshiCodeGen}}
-        .add(KotlinJsonAdapterFactory())
+        .addLast(KotlinJsonAdapterFactory())
         {{/moshiCodeGen}}
+        {{! VideoEventAdapter() is hardcoded, we can change it in the future if needed }}
+        .add(VideoEventAdapter())
         .add(BigDecimalAdapter())
         .add(BigIntegerAdapter())
 

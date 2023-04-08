@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 {{#moshi}}
 {{#discriminator}}
 import com.squareup.moshi.*
-import org.json.JSONObject
+import org.openapitools.client.infrastructure.Serializer
 {{/discriminator}}
 {{^discriminator}}
 import com.squareup.moshi.Json
@@ -72,19 +72,25 @@ import {{packageName}}.infrastructure.ITransformForStorage
 {{#required}}{{>data_class_req_var}}{{/required}}{{^required}}{{>data_class_opt_var}}{{/required}}{{^-last}},{{/-last}}
 
 {{/allVars}}
-){{/discriminator}}{{#vendorExtensions.x-stream-event-call-type}} : WSEvent(), WSCallEvent{{/vendorExtensions.x-stream-event-call-type}}{{#vendorExtensions.x-stream-event-client-type}} : WSEvent(), WSClientEvent{{/vendorExtensions.x-stream-event-client-type}}{{#parent}}{{^serializableModel}}{{^parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{#serializableModel}}{{^parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Serializable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{^serializableModel}}{{#parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{#serializableModel}}{{#parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Serializable, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{#serializableModel}}{{^parcelizeModels}} : Serializable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{^serializableModel}}{{#parcelizeModels}} : Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{#serializableModel}}{{#parcelizeModels}} : Serializable, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#generateRoomModels}}{{#parent}}, {{/parent}}{{^discriminator}}{{^parent}}:{{/parent}} ITransformForStorage<{{classname}}RoomModel>{{/discriminator}}{{/generateRoomModels}}{{#vendorExtensions.x-has-data-class-body}} {
-{{/vendorExtensions.x-has-data-class-body}}
+){{/discriminator}}{{#vendorExtensions.x-stream-event-call-type}} : {{vendorExtensions.x-stream-ws-base-event-name}}(), WSCallEvent{{/vendorExtensions.x-stream-event-call-type}}{{#vendorExtensions.x-stream-event-client-type}} : {{vendorExtensions.x-stream-ws-base-event-name}}(), WSClientEvent{{/vendorExtensions.x-stream-event-client-type}}{{#parent}}{{^serializableModel}}{{^parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{#serializableModel}}{{^parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Serializable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{^serializableModel}}{{#parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{#serializableModel}}{{#parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Serializable, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{#serializableModel}}{{^parcelizeModels}} : Serializable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{^serializableModel}}{{#parcelizeModels}} : Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{#serializableModel}}{{#parcelizeModels}} : Serializable, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#generateRoomModels}}{{#parent}}, {{/parent}}{{^discriminator}}{{^parent}}:{{/parent}} ITransformForStorage<{{classname}}RoomModel>{{/discriminator}}{{/generateRoomModels}} {
+{{! hard-coded stuff to make the event things work }}
+{{#discriminator}}
+    abstract fun getEventType(): String
+{{/discriminator}}
 {{#vendorExtensions.x-stream-event-call-type}}
-{{^vendorExtensions.x-has-data-class-body}}
-{
-{{/vendorExtensions.x-has-data-class-body}}
     override fun getCallCID(): String {
         return callCid
     }
-{{^vendorExtensions.x-has-data-class-body}}
-}
-{{/vendorExtensions.x-has-data-class-body}}
+
+    override fun getEventType(): String {
+        return type
+    }
 {{/vendorExtensions.x-stream-event-call-type}}
+{{#vendorExtensions.x-stream-event-client-type}}
+    override fun getEventType(): String {
+        return type
+    }
+{{/vendorExtensions.x-stream-event-client-type}}
 {{#generateRoomModels}}
     companion object { }
     {{^discriminator}}override fun toRoomModel(): {{classname}}RoomModel =
@@ -157,21 +163,34 @@ import {{packageName}}.infrastructure.ITransformForStorage
 {{/vars}}
 {{/discriminator}}
 {{/hasEnums}}
-{{#vendorExtensions.x-has-data-class-body}}
 }
-{{/vendorExtensions.x-has-data-class-body}}
 
+{{! additional part about json decoding }}
 {{#discriminator}}
 class {{classname}}Adapter : JsonAdapter<{{classname}}>() {
-    private val moshi = Moshi.Builder().build()
 
+    @FromJson
     override fun fromJson(reader: JsonReader): {{classname}}? {
-        val jsonObject = reader.readJsonValue() as? JSONObject ?: return null
-        val type = jsonObject.optString("type", null) ?: return null
-        val jsonAdapter = moshi.adapter(getSubclass(type))
-        return jsonAdapter.fromJson(jsonObject.toString())
+        val peek = reader.peekJson()
+        var eventType: String? = null
+        reader.beginObject()
+        while (reader.hasNext()) {
+            if (reader.nextName() == "type") {
+                eventType = reader.nextString()
+            } else {
+                reader.skipValue()
+            }
+        }
+        reader.endObject()
+
+        return eventType?.let {
+            peek.use { peekedReader ->
+                Serializer.moshi.adapter(getSubclass(eventType)).fromJson(peekedReader)
+            }
+        }
     }
 
+    @ToJson
     override fun toJson(writer: JsonWriter, value: {{classname}}?) {
         throw UnsupportedOperationException("toJson not implemented")
     }
@@ -184,5 +203,4 @@ class {{classname}}Adapter : JsonAdapter<{{classname}}>() {
             else -> throw IllegalArgumentException("Unknown type: $type")
         }
     }
-}
-{{/discriminator}}
+}{{/discriminator}}
