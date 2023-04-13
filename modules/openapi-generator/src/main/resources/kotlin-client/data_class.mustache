@@ -78,6 +78,9 @@ import {{packageName}}.infrastructure.ITransformForStorage
     abstract fun getEventType(): String
 }
 {{/discriminator}}
+{{#vendorExtensions.x-has-data-class-body}}{{^discriminator}}
+{
+{{/discriminator}}{{/vendorExtensions.x-has-data-class-body}}
 {{#vendorExtensions.x-stream-event-call-type}}
     override fun getCallCID(): String {
         return callCid
@@ -166,6 +169,9 @@ import {{packageName}}.infrastructure.ITransformForStorage
 {{/vars}}
 {{/discriminator}}
 {{/hasEnums}}
+{{#vendorExtensions.x-has-data-class-body}}{{^discriminator}}
+}
+{{/discriminator}}{{/vendorExtensions.x-has-data-class-body}}
 {{! additional part about json decoding }}
 {{#discriminator}}
 class {{classname}}Adapter : JsonAdapter<{{classname}}>() {
