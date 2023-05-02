@@ -3,13 +3,13 @@
 import com.google.gson.annotations.SerializedName
 {{/gson}}
 {{#moshi}}
-{{#discriminator}}
-import com.squareup.moshi.*
-import org.openapitools.client.infrastructure.Serializer
-{{/discriminator}}
-{{^discriminator}}
+import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
-{{/discriminator}}
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonReader
+import com.squareup.moshi.JsonWriter
+import com.squareup.moshi.ToJson
+import org.openapitools.client.infrastructure.Serializer
 {{#moshiCodeGen}}
 import com.squareup.moshi.JsonClass
 {{/moshiCodeGen}}
@@ -72,7 +72,7 @@ import {{packageName}}.infrastructure.ITransformForStorage
 {{#required}}{{>data_class_req_var}}{{/required}}{{^required}}{{>data_class_opt_var}}{{/required}}{{^-last}},{{/-last}}
 
 {{/allVars}}
-){{/discriminator}}{{#vendorExtensions.x-stream-event-call-type}}: {{vendorExtensions.x-stream-ws-base-event-name}}(), WSCallEvent{{/vendorExtensions.x-stream-event-call-type}}{{#vendorExtensions.x-stream-event-client-type}}: {{vendorExtensions.x-stream-ws-base-event-name}}(), WSClientEvent{{/vendorExtensions.x-stream-event-client-type}}{{#parent}}{{^serializableModel}}{{^parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{#serializableModel}}{{^parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Serializable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{^serializableModel}}{{#parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{#serializableModel}}{{#parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Serializable, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{#serializableModel}}{{^parcelizeModels}} : Serializable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{^serializableModel}}{{#parcelizeModels}} : Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{#serializableModel}}{{#parcelizeModels}} : Serializable, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#generateRoomModels}}{{#parent}}, {{/parent}}{{^discriminator}}{{^parent}}:{{/parent}} ITransformForStorage<{{classname}}RoomModel>{{/discriminator}}{{/generateRoomModels}}{{#discriminator}}{ {{/discriminator}}{{#vendorExtensions.x-stream-event-call-type}}{ {{/vendorExtensions.x-stream-event-call-type}}{{#vendorExtensions.x-stream-event-client-type}}{ {{/vendorExtensions.x-stream-event-client-type}}
+){{/discriminator}}{{#vendorExtensions.x-stream-event-call-type}}: {{vendorExtensions.x-stream-ws-base-event-name}}(), WSCallEvent{{/vendorExtensions.x-stream-event-call-type}}{{#vendorExtensions.x-stream-event-client-type}}: {{vendorExtensions.x-stream-ws-base-event-name}}(), WSClientEvent{{/vendorExtensions.x-stream-event-client-type}}{{#parent}}{{^serializableModel}}{{^parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{#serializableModel}}{{^parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Serializable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{^serializableModel}}{{#parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#parent}}{{#serializableModel}}{{#parcelizeModels}} : {{{parent}}}{{#isMap}}(){{/isMap}}{{#isArray}}(){{/isArray}}, Serializable, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{#serializableModel}}{{^parcelizeModels}} : Serializable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{^serializableModel}}{{#parcelizeModels}} : Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{^parent}}{{#serializableModel}}{{#parcelizeModels}} : Serializable, Parcelable{{/parcelizeModels}}{{/serializableModel}}{{/parent}}{{#generateRoomModels}}{{#parent}}, {{/parent}}{{^discriminator}}{{^parent}}:{{/parent}} ITransformForStorage<{{classname}}RoomModel>{{/discriminator}}{{/generateRoomModels}}{{#discriminator}} { {{/discriminator}}{{#vendorExtensions.x-stream-event-call-type}} { {{/vendorExtensions.x-stream-event-call-type}}{{#vendorExtensions.x-stream-event-client-type}} { {{/vendorExtensions.x-stream-event-client-type}}
 {{! hard-coded stuff to make the event things work }}
 {{#discriminator}}
     abstract fun getEventType(): String
@@ -127,30 +127,43 @@ import {{packageName}}.infrastructure.ITransformForStorage
     {{#multiplatform}}
     @Serializable
     {{/multiplatform}}
-    {{#nonPublicApi}}internal {{/nonPublicApi}}enum class {{{nameInCamelCase}}}(val value: {{^isContainer}}{{dataType}}{{/isContainer}}{{#isContainer}}kotlin.String{{/isContainer}}) {
-    {{#allowableValues}}
-    {{#enumVars}}
-        {{^multiplatform}}
-        {{#moshi}}
-        @Json(name = {{^isString}}"{{/isString}}{{{value}}}{{^isString}}"{{/isString}}) {{&name}}({{{value}}}){{^-last}},{{/-last}}{{#-last}};{{/-last}}
-        {{/moshi}}
-        {{#gson}}
-        @SerializedName(value = {{^isString}}"{{/isString}}{{{value}}}{{^isString}}"{{/isString}}) {{&name}}({{{value}}}){{^-last}},{{/-last}}{{#-last}};{{/-last}}
-        {{/gson}}
-        {{#jackson}}
-        @JsonProperty(value = {{^isString}}"{{/isString}}{{{value}}}{{^isString}}"{{/isString}}) {{&name}}({{{value}}}){{^-last}},{{/-last}}{{#-last}};{{/-last}}
-        {{/jackson}}
-        {{#kotlinx_serialization}}
-        @SerialName(value = {{^isString}}"{{/isString}}{{{value}}}{{^isString}}"{{/isString}}) {{&name}}({{{value}}}){{^-last}},{{/-last}}{{#-last}};{{/-last}}
-        {{/kotlinx_serialization}}
-        {{/multiplatform}}
-        {{#multiplatform}}
-        @SerialName(value = {{^isString}}"{{/isString}}{{{value}}}{{^isString}}"{{/isString}}) {{&name}}({{{value}}}){{^-last}},{{/-last}}{{#-last}};{{/-last}}
-        {{/multiplatform}}
-    {{/enumVars}}
-    {{/allowableValues}}
-    }{{#kotlinx_serialization}}{{#enumUnknownDefaultCase}}
 
+    {{#nonPublicApi}}internal {{/nonPublicApi}}sealed class {{{nameInCamelCase}}}(val value: kotlin.String) {
+        override fun toString(): String = value
+
+        companion object {
+            fun fromString(s: kotlin.String): {{{nameInCamelCase}}} = when (s) {
+                {{#allowableValues}}
+                {{#enumVars}}
+                {{{value}}} -> {{#lambda.kotlinidescape}}{{#lambda.pascalcase}}{{&name}}{{/lambda.pascalcase}}{{/lambda.kotlinidescape}}
+                {{/enumVars}}
+                {{/allowableValues}}
+                else -> Unknown(s)
+            }
+        }
+
+        {{#allowableValues}}
+        {{#enumVars}}
+        object {{#lambda.kotlinidescape}}{{#lambda.pascalcase}}{{&name}}{{/lambda.pascalcase}}{{/lambda.kotlinidescape}} : {{{nameInCamelCase}}}({{{value}}})
+        {{/enumVars}}
+        {{/allowableValues}}
+        data class Unknown(val unknownValue: kotlin.String) : {{{nameInCamelCase}}}(unknownValue)
+
+        class {{{nameInCamelCase}}}Adapter : JsonAdapter<{{{nameInCamelCase}}}>() {
+            @FromJson
+            override fun fromJson(reader: JsonReader): {{{nameInCamelCase}}}? {
+                val s = reader.nextString() ?: return null
+                return fromString(s)
+            }
+
+            @ToJson
+            override fun toJson(writer: JsonWriter, value: {{{nameInCamelCase}}}?) {
+                writer.value(value?.value)
+            }
+        }
+    }
+
+    {{#kotlinx_serialization}}{{#enumUnknownDefaultCase}}
     @Serializer(forClass = {{{nameInCamelCase}}}::class)
     internal object {{nameInCamelCase}}Serializer : KSerializer<{{nameInCamelCase}}> {
         override val descriptor = {{{dataType}}}.serializer().descriptor
