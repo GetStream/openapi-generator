@@ -74,7 +74,6 @@ public class Swift5ClientCodegen extends DefaultCodegen implements CodegenConfig
     public static final String USE_JSON_ENCODABLE = "useJsonEncodable";
     public static final String MAP_FILE_BINARY_TO_DATA = "mapFileBinaryToData";
     public static final String USE_CUSTOM_DATE_WITHOUT_TIME = "useCustomDateWithoutTime";
-    public static final String VALIDATABLE = "validatable";
     protected static final String LIBRARY_ALAMOFIRE = "alamofire";
     protected static final String LIBRARY_URLSESSION = "urlsession";
     protected static final String LIBRARY_VAPOR = "vapor";
@@ -100,7 +99,6 @@ public class Swift5ClientCodegen extends DefaultCodegen implements CodegenConfig
     protected boolean useJsonEncodable = true;
     protected boolean mapFileBinaryToData = false;
     protected boolean useCustomDateWithoutTime = false;
-    protected boolean validatable = true;
     protected String[] responseAs = new String[0];
     protected String sourceFolder = swiftPackagePath;
     protected HashSet objcReservedWords;
@@ -146,7 +144,7 @@ public class Swift5ClientCodegen extends DefaultCodegen implements CodegenConfig
                         "AnyObject",
                         "Any",
                         "Decimal",
-                        "AnyCodable") // from AnyCodable dependency
+                        "[String: RawJSON]")
         );
         defaultIncludes = new HashSet<>(
                 Arrays.asList(
@@ -247,8 +245,8 @@ public class Swift5ClientCodegen extends DefaultCodegen implements CodegenConfig
         typeMapping.put("UUID", "UUID");
         typeMapping.put("URI", "String");
         typeMapping.put("decimal", "Decimal");
-        typeMapping.put("object", "AnyCodable");
-        typeMapping.put("AnyType", "AnyCodable");
+        typeMapping.put("object", "[String: RawJSON]");
+        typeMapping.put("AnyType", "RawJSON");
 
         importMapping = new HashMap<>();
 
@@ -318,10 +316,6 @@ public class Swift5ClientCodegen extends DefaultCodegen implements CodegenConfig
         cliOptions.add(new CliOption(USE_CUSTOM_DATE_WITHOUT_TIME,
             "Uses a custom type to decode and encode dates without time information to support OpenAPIs date format (default: false)")
             .defaultValue(Boolean.FALSE.toString()));
-
-        cliOptions.add(new CliOption(VALIDATABLE,
-            "Make validation rules and validator for model properies (default: true)")
-            .defaultValue(Boolean.TRUE.toString()));
 
         supportedLibraries.put(LIBRARY_URLSESSION, "[DEFAULT] HTTP client: URLSession");
         supportedLibraries.put(LIBRARY_ALAMOFIRE, "HTTP client: Alamofire");
@@ -454,21 +448,7 @@ public class Swift5ClientCodegen extends DefaultCodegen implements CodegenConfig
             }
         }
         additionalProperties.put(RESPONSE_AS, responseAs);
-        if (ArrayUtils.contains(responseAs, RESPONSE_LIBRARY_PROMISE_KIT)) {
-            additionalProperties.put("usePromiseKit", true);
-        }
-        if (ArrayUtils.contains(responseAs, RESPONSE_LIBRARY_RX_SWIFT)) {
-            additionalProperties.put("useRxSwift", true);
-        }
-        if (ArrayUtils.contains(responseAs, RESPONSE_LIBRARY_RESULT)) {
-            additionalProperties.put("useResult", true);
-        }
-        if (ArrayUtils.contains(responseAs, RESPONSE_LIBRARY_COMBINE)) {
-            additionalProperties.put("useCombine", true);
-        }
-        if (ArrayUtils.contains(responseAs, RESPONSE_LIBRARY_ASYNC_AWAIT)) {
-            additionalProperties.put("useAsyncAwait", true);
-        }
+        additionalProperties.put("useAsyncAwait", true);
 
         // Setup readonlyProperties option, which declares properties so they can only
         // be set at initialization
@@ -487,10 +467,6 @@ public class Swift5ClientCodegen extends DefaultCodegen implements CodegenConfig
         // classes inner-class of {{projectName}}API
         if (additionalProperties.containsKey(SWIFT_USE_API_NAMESPACE)) {
             setSwiftUseApiNamespace(convertPropertyToBooleanAndWriteBack(SWIFT_USE_API_NAMESPACE));
-        }
-
-        if (!additionalProperties.containsKey(POD_AUTHORS)) {
-            additionalProperties.put(POD_AUTHORS, DEFAULT_POD_AUTHORS);
         }
 
         if (additionalProperties.containsKey(USE_SPM_FILE_STRUCTURE)) {
@@ -546,104 +522,33 @@ public class Swift5ClientCodegen extends DefaultCodegen implements CodegenConfig
         }
         additionalProperties.put(USE_CLASSES, useClasses);
 
-        if (additionalProperties.containsKey(VALIDATABLE)) {
-            setValidatable(convertPropertyToBooleanAndWriteBack(VALIDATABLE));
-        }
-        additionalProperties.put(VALIDATABLE, validatable);
-
         setLenientTypeCast(convertPropertyToBooleanAndWriteBack(LENIENT_TYPE_CAST));
 
         // make api and model doc path available in mustache template
         additionalProperties.put("apiDocPath", apiDocPath);
         additionalProperties.put("modelDocPath", modelDocPath);
 
-        if (!getLibrary().equals(LIBRARY_VAPOR)) {
-            supportingFiles.add(new SupportingFile("Podspec.mustache",
-                    "",
-                    projectName + ".podspec"));
-            supportingFiles.add(new SupportingFile("Cartfile.mustache",
-                    "",
-                    "Cartfile"));
-            supportingFiles.add(new SupportingFile("CodableHelper.mustache",
-                    sourceFolder,
-                    "CodableHelper.swift"));
-            supportingFiles.add(new SupportingFile("JSONDataEncoding.mustache",
-                    sourceFolder,
-                    "JSONDataEncoding.swift"));
-            supportingFiles.add(new SupportingFile("JSONEncodingHelper.mustache",
-                    sourceFolder,
-                    "JSONEncodingHelper.swift"));
-            supportingFiles.add(new SupportingFile("git_push.sh.mustache",
-                    "",
-                    "git_push.sh"));
-            supportingFiles.add(new SupportingFile("SynchronizedDictionary.mustache",
-                    sourceFolder,
-                    "SynchronizedDictionary.swift"));
-            supportingFiles.add(new SupportingFile("XcodeGen.mustache",
-                    "",
-                    "project.yml"));
-            supportingFiles.add(new SupportingFile("APIHelper.mustache",
-                    sourceFolder,
-                    "APIHelper.swift"));
-            supportingFiles.add(new SupportingFile("Models.mustache",
-                    sourceFolder,
-                    "Models.swift"));
-        }
-        supportingFiles.add(new SupportingFile("Package.swift.mustache",
-                "",
-                "Package.swift"));
-        supportingFiles.add(new SupportingFile("Configuration.mustache",
+        supportingFiles.add(new SupportingFile("CodableHelper.mustache",
                 sourceFolder,
-                "Configuration.swift"));
+                "CodableHelper.swift"));
+        supportingFiles.add(new SupportingFile("JSONDataEncoding.mustache",
+                sourceFolder,
+                "JSONDataEncoding.swift"));
+        supportingFiles.add(new SupportingFile("JSONEncodingHelper.mustache",
+                sourceFolder,
+                "JSONEncodingHelper.swift"));
+        supportingFiles.add(new SupportingFile("APIHelper.mustache",
+                sourceFolder,
+                "APIHelper.swift"));
+        supportingFiles.add(new SupportingFile("Models.mustache",
+                sourceFolder,
+                "Models.swift"));
         supportingFiles.add(new SupportingFile("Extensions.mustache",
                 sourceFolder,
                 "Extensions.swift"));
         supportingFiles.add(new SupportingFile("OpenISO8601DateFormatter.mustache",
                 sourceFolder,
                 "OpenISO8601DateFormatter.swift"));
-        if (useCustomDateWithoutTime) {
-            supportingFiles.add(new SupportingFile("OpenAPIDateWithoutTime.mustache",
-                sourceFolder,
-                "OpenAPIDateWithoutTime.swift"));
-        }
-        supportingFiles.add(new SupportingFile("APIs.mustache",
-                sourceFolder,
-                "APIs.swift"));
-        if (validatable) {
-            supportingFiles.add(new SupportingFile("Validation.mustache",
-            sourceFolder,
-            "Validation.swift"));
-        }
-        supportingFiles.add(new SupportingFile("gitignore.mustache",
-                "",
-                ".gitignore"));
-        supportingFiles.add(new SupportingFile("README.mustache",
-                "",
-                "README.md"));
-        supportingFiles.add(new SupportingFile("swiftformat.mustache",
-                "",
-                ".swiftformat"));
-
-        switch (getLibrary()) {
-            case LIBRARY_ALAMOFIRE:
-                additionalProperties.put("useAlamofire", true);
-                supportingFiles.add(new SupportingFile("AlamofireImplementations.mustache",
-                        sourceFolder,
-                        "AlamofireImplementations.swift"));
-                break;
-            case LIBRARY_URLSESSION:
-                additionalProperties.put("useURLSession", true);
-                supportingFiles.add(new SupportingFile("URLSessionImplementations.mustache",
-                        sourceFolder,
-                        "URLSessionImplementations.swift"));
-                break;
-            case LIBRARY_VAPOR:
-                additionalProperties.put("useVapor", true);
-                break;
-            default:
-                break;
-        }
-
     }
 
     public boolean isMapFileBinaryToData() {
@@ -1012,10 +917,6 @@ public class Swift5ClientCodegen extends DefaultCodegen implements CodegenConfig
 
     public void setUseJsonEncodable(boolean useJsonEncodable) {
         this.useJsonEncodable = useJsonEncodable;
-    }
-
-    public void setValidatable(boolean validatable) {
-        this.validatable = validatable;
     }
 
     @Override

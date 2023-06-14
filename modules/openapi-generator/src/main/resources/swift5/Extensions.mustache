@@ -5,11 +5,6 @@
 //
 
 import Foundation
-#if canImport(AnyCodable)
-import AnyCodable
-#endif{{#usePromiseKit}}
-import PromiseKit{{/usePromiseKit}}{{#useVapor}}
-import Vapor{{/useVapor}}{{^useVapor}}
 
 extension Bool: JSONEncodable {
     func encodeToJSON() -> Any { self }
@@ -104,7 +99,7 @@ extension JSONEncodable where Self: Encodable {
         }
         return data.encodeToJSON()
     }
-}{{/useVapor}}{{#generateModelAdditionalProperties}}
+}{{#generateModelAdditionalProperties}}
 
 extension String: CodingKey {
 
@@ -223,28 +218,7 @@ extension KeyedDecodingContainerProtocol {
         return decimalValue
     }
 
-}{{/generateModelAdditionalProperties}}{{^useVapor}}
-
-extension HTTPURLResponse {
-    var isStatusCodeSuccessful: Bool {
-        return Configuration.successfulStatusCodeRange.contains(statusCode)
-    }
-}{{/useVapor}}{{#usePromiseKit}}
-
-extension RequestBuilder {
-    {{#nonPublicApi}}internal{{/nonPublicApi}}{{^nonPublicApi}}public{{/nonPublicApi}} func execute() -> Promise<Response<T>> {
-        let deferred = Promise<Response<T>>.pending()
-        self.execute { result in
-            switch result {
-            case let .success(response):
-                deferred.resolver.fulfill(response)
-            case let .failure(error):
-                deferred.resolver.reject(error)
-            }
-        }
-        return deferred.promise
-    }
-}{{/usePromiseKit}}{{#useVapor}}
+}{{/generateModelAdditionalProperties}}{{#useVapor}}
 
 extension UUID: Content { }
 
