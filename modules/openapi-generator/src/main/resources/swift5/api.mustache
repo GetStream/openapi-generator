@@ -197,7 +197,7 @@ protocol {{classname}}ClientMiddleware: Sendable {
         let {{paramName}}PreEscape = "\({{#isEnum}}{{paramName}}{{#isContainer}}{{{dataType}}}{{/isContainer}}{{^isContainer}}.rawValue{{/isContainer}}{{/isEnum}}{{^isEnum}}APIHelper.mapValueToPathItem({{paramName}}){{/isEnum}})"
         let {{paramName}}PostEscape = {{paramName}}PreEscape.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
         localVariablePath = localVariablePath.replacingOccurrences(of: "{{=<% %>=}}{<%baseName%>}<%={{ }}=%>", with: {{paramName}}PostEscape, options: .literal, range: nil){{/pathParams}}
-        {{#hasQueryParams}}var queryParams = APIHelper.mapValuesToQueryItems([
+        {{#hasQueryParams}}let queryParams = APIHelper.mapValuesToQueryItems([
             {{#queryParams}}
             {{> _param }},
             {{/queryParams}}
