@@ -3,7 +3,12 @@
 import com.google.gson.annotations.SerializedName
 {{/gson}}
 {{#moshi}}
+import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonReader
+import com.squareup.moshi.JsonWriter
+import com.squareup.moshi.ToJson
 {{/moshi}}
 {{#jackson}}
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -30,65 +35,37 @@ import kotlinx.serialization.*
  * Values: {{#allowableValues}}{{#enumVars}}{{&name}}{{^-last}},{{/-last}}{{/enumVars}}{{/allowableValues}}
  */
 {{#multiplatform}}@Serializable{{/multiplatform}}{{#kotlinx_serialization}}@Serializable{{#enumUnknownDefaultCase}}(with = {{classname}}Serializer::class){{/enumUnknownDefaultCase}}{{/kotlinx_serialization}}
-{{#nonPublicApi}}internal {{/nonPublicApi}}enum class {{classname}}(val value: {{{dataType}}}) {
-{{#allowableValues}}{{#enumVars}}
-    {{^multiplatform}}
-    {{#moshi}}
-    @Json(name = {{^isString}}"{{/isString}}{{{value}}}{{^isString}}"{{/isString}})
-    {{/moshi}}
-    {{#gson}}
-    @SerializedName(value = {{^isString}}"{{/isString}}{{{value}}}{{^isString}}"{{/isString}})
-    {{/gson}}
-    {{#jackson}}
-    @JsonProperty(value = {{^isString}}"{{/isString}}{{{value}}}{{^isString}}"{{/isString}})
-    {{/jackson}}
-    {{#kotlinx_serialization}}
-    @SerialName(value = {{^isString}}"{{/isString}}{{{value}}}{{^isString}}"{{/isString}})
-    {{/kotlinx_serialization}}
-    {{/multiplatform}}
-    {{#multiplatform}}
-    @SerialName(value = {{^isString}}"{{/isString}}{{{value}}}{{^isString}}"{{/isString}})
-    {{/multiplatform}}
-    {{#isArray}}
-    {{#isList}}
-    {{&name}}(listOf({{{value}}})),
-    {{/isList}}
-    {{^isList}}
-    {{&name}}(arrayOf({{{value}}})),
-    {{/isList}}
-    {{/isArray}}
-    {{^isArray}}
-    {{&name}}({{{value}}}),
-    {{/isArray}}
-{{/enumVars}}{{/allowableValues}}
-    /**
-    * This case is used when decoding an unknown value.
-    */
-    unknown("unknown");
-
-    /**
-     * Override toString() to avoid using the enum variable name as the value, and instead use
-     * the actual value defined in the API spec file.
-     *
-     * This solves a problem when the variable name and its value are different, and ensures that
-     * the client sends the correct enum values to the server always.
-     */
-    override fun toString(): String = value{{^isString}}.toString(){{/isString}}
+{{#nonPublicApi}}internal {{/nonPublicApi}}sealed class {{classname}}(val value: {{{dataType}}}) {
+    override fun toString(): String = value
 
     companion object {
-        /**
-         * Converts the provided [data] to a [String] on success, null otherwise.
-         */
-        fun encode(data: kotlin.Any?): kotlin.String? = if (data is {{classname}}) "$data" else null
+        fun fromString(s: kotlin.String): {{classname}} = when (s) {
+        {{#allowableValues}}
+        {{#enumVars}}
+            {{{value}}} -> {{#lambda.kotlinidescape}}{{#lambda.pascalcase}}{{&name}}{{/lambda.pascalcase}}{{/lambda.kotlinidescape}}
+        {{/enumVars}}
+        {{/allowableValues}}
+            else -> Unknown(s)
+        }
+    }
 
-        /**
-         * Returns a valid [{{classname}}] for [data], unknown otherwise.
-         */
-        fun decode(data: kotlin.Any?): {{classname}}? = data?.let {
-          val normalizedData = "$it".lowercase()
-          values().firstOrNull { value ->
-            it == value || normalizedData == "$value".lowercase()
-          }?: unknown
+    {{#allowableValues}}
+    {{#enumVars}}
+    object {{#lambda.kotlinidescape}}{{#lambda.pascalcase}}{{&name}}{{/lambda.pascalcase}}{{/lambda.kotlinidescape}} : {{classname}}({{{value}}})
+    {{/enumVars}}
+    {{/allowableValues}}
+    data class Unknown(val unknownValue: kotlin.String) : {{classname}}(unknownValue)
+
+    class {{classname}}Adapter : JsonAdapter<{{classname}}>() {
+        @FromJson
+        override fun fromJson(reader: JsonReader): {{classname}}? {
+            val s = reader.nextString() ?: return null
+            return fromString(s)
+        }
+
+        @ToJson
+        override fun toJson(writer: JsonWriter, value: {{classname}}?) {
+            writer.value(value?.value)
         }
     }
 }{{#kotlinx_serialization}}{{#enumUnknownDefaultCase}}

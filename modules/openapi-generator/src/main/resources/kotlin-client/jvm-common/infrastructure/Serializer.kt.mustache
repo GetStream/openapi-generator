@@ -70,6 +70,28 @@ import java.util.concurrent.atomic.AtomicLong
         {{/moshiCodeGen}}
         {{! VideoEventAdapter() is hardcoded, we can change it in the future if needed }}
         .add(VideoEventAdapter())
+{{#moshi}}
+{{#models}}
+{{#model}}
+{{#isEnum}}
+        .add({{modelPackage}}.{{classname}}.{{classname}}Adapter())
+{{/isEnum}}
+{{^isEnum}}
+{{#hasEnums}}
+{{^discriminator}}
+    {{#allVars}}
+    {{#isEnum}}
+    {{^nonPublicApi}}
+        .add({{modelPackage}}.{{classname}}.{{{nameInCamelCase}}}.{{{nameInCamelCase}}}Adapter())
+    {{/nonPublicApi}}
+    {{/isEnum}}
+    {{/allVars}}
+{{/discriminator}}
+{{/hasEnums}}
+{{/isEnum}}
+{{/model}}
+{{/models}}
+{{/moshi}}
         .add(BigDecimalAdapter())
         .add(BigIntegerAdapter())
 

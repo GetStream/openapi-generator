@@ -25,6 +25,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.collect.ImmutableMap;
+import com.samskivert.mustache.Mustache;
 import org.apache.commons.lang3.StringUtils;
 import org.openapitools.codegen.CliOption;
 import org.openapitools.codegen.CodegenConstants;
@@ -45,6 +47,7 @@ import org.openapitools.codegen.model.ModelMap;
 import org.openapitools.codegen.model.ModelsMap;
 import org.openapitools.codegen.model.OperationMap;
 import org.openapitools.codegen.model.OperationsMap;
+import org.openapitools.codegen.templating.mustache.KotlinIdentifierEscapeLambda;
 import org.openapitools.codegen.utils.ProcessUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -247,6 +250,13 @@ public class KotlinClientCodegen extends AbstractKotlinCodegen {
         cliOptions.add(CliOption.newBoolean(GENERATE_ROOM_MODELS, "Generate Android Room database models in addition to API models (JVM Volley library only)", false));
 
         cliOptions.add(CliOption.newBoolean(SUPPORT_ANDROID_API_LEVEL_25_AND_BELLOW, "[WARNING] This flag will generate code that has a known security vulnerability. It uses `kotlin.io.createTempFile` instead of `java.nio.file.Files.createTempFile` in order to support Android API level 25 and bellow. For more info, please check the following links https://github.com/OpenAPITools/openapi-generator/security/advisories/GHSA-23x4-m842-fmwf, https://github.com/OpenAPITools/openapi-generator/pull/9284"));
+    }
+
+    @Override
+    protected ImmutableMap.Builder<String, Mustache.Lambda> addMustacheLambdas() {
+        ImmutableMap.Builder<String, Mustache.Lambda> lambdas = super.addMustacheLambdas();
+        lambdas.put("kotlinidescape", new KotlinIdentifierEscapeLambda());
+        return lambdas;
     }
 
     public CodegenType getTag() {
@@ -850,22 +860,22 @@ public class KotlinClientCodegen extends AbstractKotlinCodegen {
                         // match on first part in mediaTypes like 'application/json; charset=utf-8'
                         int endIndex = mediaTypeValue.indexOf(';');
                         String mediaType = (endIndex == -1
-                            ? mediaTypeValue
-                            : mediaTypeValue.substring(0, endIndex)
+                                ? mediaTypeValue
+                                : mediaTypeValue.substring(0, endIndex)
                         ).trim();
                         return "multipart/form-data".equals(mediaType)
-                            || "application/x-www-form-urlencoded".equals(mediaType)
-                            || (mediaType.startsWith("application/") && mediaType.endsWith("json"));
+                                || "application/x-www-form-urlencoded".equals(mediaType)
+                                || (mediaType.startsWith("application/") && mediaType.endsWith("json"));
                     };
                     operation.consumes = operation.consumes == null ? null : operation.consumes.stream()
-                        .filter(isSerializable)
-                        .limit(1)
-                        .collect(Collectors.toList());
+                            .filter(isSerializable)
+                            .limit(1)
+                            .collect(Collectors.toList());
                     operation.hasConsumes = operation.consumes != null && !operation.consumes.isEmpty();
 
                     operation.produces = operation.produces == null ? null : operation.produces.stream()
-                        .filter(isSerializable)
-                        .collect(Collectors.toList());
+                            .filter(isSerializable)
+                            .collect(Collectors.toList());
                     operation.hasProduces = operation.produces != null && !operation.produces.isEmpty();
                 }
 
