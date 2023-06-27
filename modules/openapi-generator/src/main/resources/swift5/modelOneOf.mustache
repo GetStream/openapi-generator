@@ -8,7 +8,25 @@ internal class {{classname}}Mapping: Decodable {
     {{#oneOf}}
     case type{{.}}({{.}})
     {{/oneOf}}
-
+    {{#discriminator}}
+    public var type: String {
+        switch self {
+        {{#oneOf}}
+        case .type{{.}}(let value):
+            return value.type
+        {{/oneOf}}
+        }
+    }
+    {{! HACK: to make event handling simpler in Swift, the rawValue has Event hardcoded }}
+    public var rawValue: Event {
+        switch self {
+        {{#oneOf}}
+        case .type{{.}}(let value):
+            return value
+        {{/oneOf}}
+        }
+    }
+    {{/discriminator}}
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         switch self {
